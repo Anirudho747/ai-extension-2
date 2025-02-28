@@ -718,6 +718,26 @@ class ChatUI {
                 return 'CUCUMBER_ONLY';
             }
         }
+
+// Python+Selenium
+        if (language === 'python' && engine === 'selenium') {
+            // read the radio buttons
+            const selectedRadio = document.querySelector('input[name="javaGenerationMode"]:checked');
+            if (!selectedRadio) {
+                // fallback
+                return 'SELENIUM_PYTHON_TEST_ONLY';
+            }
+            const radioValue = selectedRadio.value; // "PAGE" or "TEST"
+
+            if (radioValue === 'PAGE') {
+                return 'SELENIUM_PYTHON_PAGE_ONLY';
+            } else if (radioValue === 'TEST') {
+                return 'SELENIUM_PYTHON_TEST_ONLY';
+            } else{
+                return 'CUCUMBER_ONLY';
+            }
+        }
+
         // if csharp+selenium...
         if (language === 'csharp' && engine === 'selenium') {
             return 'SELENIUM_CSHARP_CODE_GENERATION';
