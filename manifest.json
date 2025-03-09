@@ -2,8 +2,8 @@
 "update_url": "https://clients2.google.com/service/update2/crx",
 
     "manifest_version": 3,
-    "name": "mAgIc-2",
-    "version": "1.60",
+    "name": "mAgIc-52",
+    "version": "1.78",
     "description": "Test automation code generator using Generative AI",
     "permissions": [
         "activeTab",
@@ -43,6 +43,6 @@
         "matches": ["<all_urls>"]
     }],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; connect-src 'self'  https://api.groq.com https://api.openai.com"
+        "extension_pages": "script-src 'self'; connect-src 'self'  https://api.groq.com https://api.openai.com https://api.testleaf.com"
     }
 }
