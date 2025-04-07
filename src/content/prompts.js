@@ -637,7 +637,6 @@ class ComponentPage:
   \`\`\`
 `,
 
-
   /**
    * Prompt for generating Cucumber Feature file
    */

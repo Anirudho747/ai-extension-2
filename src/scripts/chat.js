@@ -163,7 +163,7 @@ class ChatUI {
                 const match = finalCode.match(/test\(['"]([^'"]+)['"]/);
                 fileName = match ? match[1].trim().replace(/\s+/g, '_') : 'Test';
                 fileName += '.ts';
-            } else if (this.codeGeneratorType === 'PLAYWRIGHT_PAGE_ONLY') {
+            } else if (this.codeGeneratorType === 'PLAYWRIGHT_TYPESCRIPT_PAGE_ONLY') {
                 // Try to extract "export class <ClassName>" from the generated code
                 const match = finalCode.match(/export class\s+(\w+)/);
                 fileName = match ? match[1] : 'Page';
@@ -521,21 +521,64 @@ class ChatUI {
 
     setupDropdowns() {
         if (!this.languageBindingSelect || !this.browserEngineSelect) return;
+
         const updateDropdowns = () => {
-            const lang = this.languageBindingSelect.value;
-            const eng  = this.browserEngineSelect.value;
+            const lang = this.languageBindingSelect.value;   // 'java','csharp','typescript'
+            const eng  = this.browserEngineSelect.value;     // 'selenium','playwright'
+
+            // If TypeScript => force Playwright, disable Selenium
             if (lang === 'typescript') {
-                this.browserEngineSelect.value = 'playwright';
+                //    this.browserEngineSelect.value = 'playwright';
                 const selOpt = this.browserEngineSelect.querySelector('option[value="selenium"]');
+                const selOpt2 = this.browserEngineSelect.querySelector('option[value="playwright"]');
+                const selOpt3 = this.browserEngineSelect.querySelector('option[value="cypress"]');
+                const selOpt4 = this.browserEngineSelect.querySelector('option[value="webdriverio"]');
                 if (selOpt) selOpt.disabled = true;
-            } else {
-                const selOpt = this.browserEngineSelect.querySelector('option[value="selenium"]');
-                if (selOpt) selOpt.disabled = false;
+                if (selOpt2) selOpt2.disabled = false;
+                if (selOpt3) selOpt3.disabled = false;
+                if (selOpt4) selOpt4.disabled = false;
             }
+            else  if (lang === 'java') {
+                const selOpt = this.browserEngineSelect.querySelector('option[value="selenium"]');
+                const selOpt2 = this.browserEngineSelect.querySelector('option[value="playwright"]');
+                const selOpt3 = this.browserEngineSelect.querySelector('option[value="cypress"]');
+                const selOpt4 = this.browserEngineSelect.querySelector('option[value="webdriverio"]');
+                if (selOpt) selOpt.disabled = false;
+                if (selOpt2) selOpt2.disabled = false;
+                if (selOpt3) selOpt3.disabled = true;
+                if (selOpt4) selOpt4.disabled = true;
+            }
+            else  if (lang === 'python') {
+                const selOpt = this.browserEngineSelect.querySelector('option[value="selenium"]');
+                const selOpt2 = this.browserEngineSelect.querySelector('option[value="playwright"]');
+                const selOpt3 = this.browserEngineSelect.querySelector('option[value="cypress"]');
+                const selOpt4 = this.browserEngineSelect.querySelector('option[value="webdriverio"]');
+                if (selOpt) selOpt.disabled = false;
+                if (selOpt2) selOpt2.disabled = false;
+                if (selOpt3) selOpt3.disabled = true;
+                if (selOpt4) selOpt4.disabled = true;
+            }
+            else  if (lang === 'javascript') {
+                const selOpt = this.browserEngineSelect.querySelector('option[value="selenium"]');
+                const selOpt2 = this.browserEngineSelect.querySelector('option[value="playwright"]');
+                const selOpt3 = this.browserEngineSelect.querySelector('option[value="cypress"]');
+                const selOpt4 = this.browserEngineSelect.querySelector('option[value="webdriverio"]');
+                if (selOpt) selOpt.disabled = false;
+                if (selOpt2) selOpt2.disabled = false;
+                if (selOpt3) selOpt3.disabled = false;
+                if (selOpt4) selOpt4.disabled = false;
+            }
+            else {
+                // const selOpt = this.browserEngineSelect.querySelector('option[value="selenium"]');
+                // if (selOpt) selOpt.disabled = false;
+            }
+
             this.codeGeneratorType = this.getPromptKey(lang, eng);
             chrome.storage.sync.set({ codeGeneratorType: this.codeGeneratorType });
         };
+
         updateDropdowns();
+
         this.languageBindingSelect.addEventListener('change', updateDropdowns);
         this.browserEngineSelect.addEventListener('change', updateDropdowns);
     }
@@ -543,6 +586,7 @@ class ChatUI {
     getPromptKey(language, engine) {
         const selectedRadio = document.querySelector('input[name="javaGenerationMode"]:checked');
         const eng  = this.browserEngineSelect.value;
+
         if (language === 'java' && engine === 'selenium') {
             if (!selectedRadio) {
                 return 'SELENIUM_JAVA_TEST_ONLY';
@@ -556,11 +600,50 @@ class ChatUI {
                 return 'CUCUMBER_ONLY';
             }
         }
-        if (engine === 'playwright') {
+        if (language === 'java' && engine === 'python') {
+            if (!selectedRadio) {
+                return 'SELENIUM_PYTHON_TEST_ONLY';
+            }
+            const radioValue = selectedRadio.value;
+            if (radioValue === 'PAGE') {
+                return 'SELENIUM_PYTHON_PAGE_ONLY';
+            } else if (radioValue === 'TEST') {
+                return 'SELENIUM_PYTHON_TEST_ONLY';
+            } else{
+                return 'CUCUMBER_ONLY';
+            }
+        }
+        if (language === 'typescript' && engine === 'webdriverio') {
+            if (!selectedRadio) {
+                return 'WEBDRIVERIO_TYPESCRIPT_CODE_GENERATION';
+            }
+            const radioValue = selectedRadio.value;
+            if (radioValue === 'PAGE') {
+                return 'WEBDRIVERIO_TYPESCRIPT_PAGE_ONLY';
+            } else if (radioValue === 'TEST') {
+                return 'WEBDRIVERIO_TYPESCRIPT_CODE_GENERATION';
+            } else{
+                return 'CUCUMBER_ONLY';
+            }
+        }
+        if (language === 'typescript' && engine === 'cypress') {
+            if (!selectedRadio) {
+                return 'CYPRESS_TYPESCRIPT_CODE_GENERATION';
+            }
+            const radioValue = selectedRadio.value;
+            if (radioValue === 'PAGE') {
+                return 'CYPRESS_TYPESCRIPT_PAGE_ONLY';
+            } else if (radioValue === 'TEST') {
+                return 'CYPRESS_TYPESCRIPT_CODE_GENERATION';
+            } else{
+                return 'CUCUMBER_ONLY';
+            }
+        }
+        if (language === 'typescript' && engine === 'playwright') {
             const selectedRadio = document.querySelector('input[name="javaGenerationMode"]:checked');
             const radioValue = selectedRadio.value;
             if (radioValue === 'PAGE') {
-                return 'PLAYWRIGHT_PAGE_ONLY';
+                return 'PLAYWRIGHT_TYPESCRIPT_PAGE_ONLY';
             } else if (radioValue === 'TEST') {
                 return 'PLAYWRIGHT_CODE_GENERATION';
             } else{
