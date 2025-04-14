@@ -16,6 +16,14 @@ export const DEFAULT_PROMPTS = {
     \${domContent}
     \`\`\`
 
+ Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
     Generate Playwright test code in TypeScript to perform the following action:
     \${userAction}
 
@@ -76,6 +84,14 @@ export const DEFAULT_PROMPTS = {
   \${domContent}
   \`\`\`
 
+  Use the following naming convention for variable names: ${namingConvention}.
+For example:
+- camelCase → loginButton, userNameInput
+- snake_case → login_button, user_name_input
+- PascalCase → LoginButton, UserNameInput
+
+Strictly follow this format when generating variable or method names.
+
   We want ONLY a Playwright TypeScript Page Object Class for that DOM:
   Action to perform: \${userAction}
   URL: \${pageUrl}
@@ -133,6 +149,14 @@ export class ComponentPage {
     \${domContent}
     \`\`\`
 
+    Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
     Generate Cypress test code in TypeScript to perform the following action:
     \${userAction}
 
@@ -194,7 +218,15 @@ describe('Descriptive test name', () => {
   \`\`\`html
   \${domContent}
   \`\`\`
+  
+   Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
 
+    Strictly follow this format when generating variable or method names.
+    
   We want ONLY a Cypress TypeScript Page Object Class for that DOM:
   Action to perform: \${userAction}
   URL: \${pageUrl}
@@ -248,6 +280,14 @@ export class ComponentPage {
     \${domContent}
     \`\`\`
 
+     Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
     Generate WebdriverIO test code in TypeScript to perform the following action:
     \${userAction}
 
@@ -310,6 +350,14 @@ export class ComponentPage {
   \${domContent}
   \`\`\`
 
+   Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
   We want ONLY a WebdriverIO TypeScript Page Object Class for that DOM:
   Action to perform: \${userAction}
   URL: \${pageUrl}
@@ -374,6 +422,14 @@ describe('Component page', () => {
   \${domContent}
   \`\`\`
 
+   Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
   We want ONLY a Selenium Java TEST CLASS using TestNG (no page object class).
   Action to perform: \${userAction}
   URL: \${pageUrl}
@@ -452,6 +508,14 @@ describe('Component page', () => {
   \${domContent}
   \`\`\`
 
+ Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
   We want ONLY a Selenium Java PAGE OBJECT CLASS for that DOM.
   Action to perform: \${userAction}
   URL: \${pageUrl}
@@ -513,6 +577,14 @@ describe('Component page', () => {
   \${domContent}
   \`\`\`
 
+   Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
   We want ONLY a Selenium Python TEST CLASS using TestNG (no page object class).
   Action to perform: \${userAction}
   URL: \${pageUrl}
@@ -586,6 +658,14 @@ if __name__ == '__main__':
   \${domContent}
   \`\`\`
 
+   Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
   We want ONLY a Selenium Python PAGE OBJECT CLASS for that DOM.
   Action to perform: \${userAction}
   URL: \${pageUrl}
@@ -646,6 +726,14 @@ class ComponentPage:
     \${domContent}
     \`\`\`
 
+    Use the following naming convention for variable names: ${namingConvention}.
+    For example:
+    - camelCase → loginButton, userNameInput
+    - snake_case → login_button, user_name_input
+    - PascalCase → LoginButton, UserNameInput
+
+    Strictly follow this format when generating variable or method names.
+    
     We want a **Cucumber (Gherkin) .feature file** referencing **every relevant field** in the DOM snippet.
 
     **Instructions**:
@@ -714,14 +802,14 @@ export function getPrompt(promptKey, variables = {}) {
 }
 
 export const CODE_GENERATOR_TYPES = {
-  PLAYWRIGHT_TYPESCRIPT_PAGE_ONLY: 'Playwright-TS-Page-Generator',
-  PLAYWRIGHT_CODE_GENERATION: 'Playwright-TS-Code-Generator',
-  CYPRESS_TYPESCRIPT_CODE_GENERATION: 'Cypress-TS-Page-Generator',
-  CYPRESS_TYPESCRIPT_PAGE_ONLY: 'Cypress-TS-Code-Generator',
   SELENIUM_JAVA_PAGE_ONLY: 'Selenium-Java-Page-Only',
   SELENIUM_JAVA_TEST_ONLY: 'Selenium-Java-Test-Only',
   SELENIUM_PYTHON_TEST_ONLY: 'Selenium-Python-Test-Only',
   SELENIUM_PYTHON_PAGE_ONLY: 'Selenium-Python-Page-Only',
+  PLAYWRIGHT_TYPESCRIPT_PAGE_ONLY: 'Playwright-TS-Page-Generator',
+  PLAYWRIGHT_CODE_GENERATION: 'Playwright-TS-Code-Generator',
+  CYPRESS_TYPESCRIPT_CODE_GENERATION: 'Cypress-TS-Page-Generator',
+  CYPRESS_TYPESCRIPT_PAGE_ONLY: 'Cypress-TS-Code-Generator',
   WEBDRIVERIO_TYPESCRIPT_CODE_GENERATION: 'WebdriverIO-TS-Page-Generator',
   WEBDRIVERIO_TYPESCRIPT_PAGE_ONLY: 'WebdriverIO-TS-Code-Generator',
   CUCUMBER_ONLY: 'Cucumber-Only'

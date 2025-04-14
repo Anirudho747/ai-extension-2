@@ -61,21 +61,20 @@ class ChatUI {
 
         // Load stored keys
         chrome.storage.sync.get(
-            ['groqApiKey','openaiApiKey','testleafApiKey','selectedModel','selectedProvider'],
+            ['groqApiKey','openaiApiKey','selectedModel','selectedProvider'],
             (result) => {
                 if (result.groqApiKey)   this.groqAPI   = new GroqAPI(result.groqApiKey);
                 if (result.openaiApiKey) this.openaiAPI = new OpenAIAPI(result.openaiApiKey);
-                if (result.testleafApiKey) this.testleafAPI = new TestleafAPI(result.testleafApiKey);
 
                 this.selectedModel    = result.selectedModel    || '';
                 this.selectedProvider = result.selectedProvider || '';
+                this.namingConvention = result.namingConvention || 'camelCase'; // [NAMING CONVENTION] loaded
             });
 
         // Listen for changes
         chrome.storage.onChanged.addListener((changes) => {
             if (changes.groqApiKey)       this.groqAPI   = new GroqAPI(changes.groqApiKey.newValue);
             if (changes.openaiApiKey)     this.openaiAPI = new OpenAIAPI(changes.openaiApiKey.newValue);
-            if (changes.testleafApiKey)   this.testleafAPI = new TestleafAPI(changes.testleafApiKey.newValue);
             if (changes.selectedModel)    this.selectedModel = changes.selectedModel.newValue;
             if (changes.selectedProvider) this.selectedProvider = changes.selectedProvider.newValue;
         });
@@ -348,6 +347,7 @@ class ChatUI {
                 ? this.selectedDomContent
                 : JSON.stringify(this.selectedDomContent, null, 2);
             const finalPrompt = getPrompt(this.codeGeneratorType, {
+                namingConvention: this.namingConvention, // [NAMING CONVENTION]
                 domContent: finalSnippet,
                 pageUrl: pageUrl,
                 javaMode: javaGenMode
@@ -391,6 +391,7 @@ class ChatUI {
                 }
             }
             // Save the generated code for download
+            this.namingConvention = 'camelCase'; // [NAMING CONVENTION] default
             this.generatedCode = messageContent;
             // Enable the download button now that code is generated
             const downloadBtn = document.getElementById('downloadCode');
@@ -544,7 +545,7 @@ class ChatUI {
                 const selOpt3 = this.browserEngineSelect.querySelector('option[value="cypress"]');
                 const selOpt4 = this.browserEngineSelect.querySelector('option[value="webdriverio"]');
                 if (selOpt) selOpt.disabled = false;
-                if (selOpt2) selOpt2.disabled = false;
+                if (selOpt2) selOpt2.disabled = true;
                 if (selOpt3) selOpt3.disabled = true;
                 if (selOpt4) selOpt4.disabled = true;
             }
@@ -554,7 +555,7 @@ class ChatUI {
                 const selOpt3 = this.browserEngineSelect.querySelector('option[value="cypress"]');
                 const selOpt4 = this.browserEngineSelect.querySelector('option[value="webdriverio"]');
                 if (selOpt) selOpt.disabled = false;
-                if (selOpt2) selOpt2.disabled = false;
+                if (selOpt2) selOpt2.disabled = true;
                 if (selOpt3) selOpt3.disabled = true;
                 if (selOpt4) selOpt4.disabled = true;
             }

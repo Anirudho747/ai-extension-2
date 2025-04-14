@@ -13,16 +13,27 @@ if (!window.elementInspector) {
             // Add styles for highlighting if you haven't already
             const style = document.createElement('style');
             style.textContent = `
-                .genai-highlight {
-                    outline: 2px solid #ff6b2b !important;
-                    outline-offset: 1px !important;
-                    cursor: crosshair !important;
-                }
-                .genai-selected {
-                    outline: 2px dashed #ff6b2b !important;
-                    outline-offset: 1px !important;
-                    background-color: rgba(255, 107, 43, 0.1) !important;
-                }
+                            .genai-highlight {
+                outline: 2px solid #ff6b2b !important;
+                outline-offset: 1px !important;
+                cursor: grab !important;
+                box-shadow: 0 0 3px rgba(255, 107, 43, 0.3);
+            }
+                            .genai-selected {
+                outline: 2px dashed #ff6b2b !important;
+                outline-offset: 1px !important;
+                background-color: rgba(255, 107, 43, 0.1) !important;
+            }
+            /* Specific styling for images */
+            .genai-highlight img {
+                cursor: grab !important;
+                outline: 2px solid #ff6b2b !important;
+            }
+            
+            .genai-selected img {
+                outline: 2px dashed #ff6b2b !important;
+                background-color: rgba(255, 107, 43, 0.1) !important;
+            }
             `;
             document.head.appendChild(style);
 
@@ -98,7 +109,7 @@ if (!window.elementInspector) {
             document.addEventListener('mouseover', this.handleMouseOver);
             document.addEventListener('mouseout', this.handleMouseOut);
             document.addEventListener('click', this.handleClick, true);
-            document.body.style.cursor = 'crosshair';
+            document.body.style.cursor = 'grab';
         }
 
         stopInspecting() {
@@ -116,59 +127,61 @@ if (!window.elementInspector) {
 
         handleMouseOver(event) {
             if (!this.isActive) return;
-            
+
             event.preventDefault();
             event.stopPropagation();
-            
+
             if (this.highlightedElement) {
                 this.highlightedElement.classList.remove('genai-highlight');
             }
-            
+
             this.highlightedElement = event.target;
             this.highlightedElement.classList.add('genai-highlight');
+            console.log('Mouse over element:', this.highlightedElement);
         }
 
         handleMouseOut(event) {
             if (!this.isActive) return;
-            
+
             event.preventDefault();
             event.stopPropagation();
-            
+
             if (this.highlightedElement) {
                 this.highlightedElement.classList.remove('genai-highlight');
                 this.highlightedElement = null;
+                console.log('Mouse out, cleared highlight');
             }
         }
 
         handleClick(event) {
             if (!this.isActive) return;
-            
+
             event.preventDefault();
             event.stopPropagation();
-            
-            const element = event.target;
 
-            // Toggle selection for multi-element usage
+            // Get the closest element that is an image or other selectable elements
+            const element = event.target.closest('img, div, p, span, a'); // Add more selectors as needed
+
+            if (!element) return;
+
+            // Toggle selection
             if (this.selectedElements.has(element)) {
-                // If already selected, unselect it
                 this.selectedElements.delete(element);
-                element.classList.remove('-selected');
+                element.classList.remove('genai-selected');
             } else {
-                // Otherwise add it
                 this.selectedElements.add(element);
                 element.classList.add('genai-selected');
             }
 
-            // Build aggregated DOM content from all selected elements
+            // Build aggregated DOM content
             const domContent = Array.from(this.selectedElements)
                 .map(el => el.outerHTML)
                 .join('\n');
 
-            console.log('[content.js] Built snippet (string?):', domContent);
-            console.log('[content.js] Type is:', typeof domContent); 
+            console.log('[content.js] Built snippet:', domContent);
+            console.log('[content.js] Type:', typeof domContent);
 
-
-            // Send updated content to the extension (sidepanel / background)
+            // Send message to extension
             chrome.runtime.sendMessage({
                 type: 'SELECTED_DOM_CONTENT',
                 content: domContent

@@ -112,7 +112,7 @@
               <option value="java">Java</option>
               <option value="typescript">TypeScript</option>
               <option value="python">Python</option>
-              <option value="javascript">JavaScript</option>
+<!--              <option value="javascript">JavaScript</option>-->
             </select>
           </div>
 
@@ -127,6 +127,16 @@
             </select>
           </div>
 
+<!--          &lt;!&ndash; Naming Convention &ndash;&gt;-->
+<!--          <div class="model-container">-->
+<!--            <label for="namingConvention">Naming Convention</label>-->
+<!--            <select id="namingConvention">-->
+<!--              <option value="camelCase">camelCase</option>-->
+<!--              <option value="snake_case">snake_case</option>-->
+<!--              <option value="PascalCase">PascalCase</option>-->
+<!--            </select>-->
+<!--          </div>-->
+
           <!-- AI Engine -->
           <div class="model-container">
             <label for="providerSelect">Select Provider</label>
@@ -134,7 +144,6 @@
               <option value="" disabled selected>Choose provider</option>
               <option value="groq">Groq</option>
               <option value="openai">OpenAI</option>
-              <option value="testleaf">Testleaf</option>
             </select>
           </div>
 
@@ -155,11 +164,6 @@
             <input type="password" id="openaiApiKey" class="api-key-input" placeholder="Enter your OpenAI API key">
           </div>
 
-          <div class="api-key-container" id="testleafKeyContainer" style="display: none;">
-            <label for="testleafApiKey">TestLeaf API Key</label>
-            <input type="password" id="testleafApiKey" class="api-key-input" placeholder="Enter your TestLeaf API key">
-          </div>
-
         </div>
       </div>
     </div>
@@ -170,6 +174,5 @@
     <script src="src/scripts/api/groq-api.js"></script>
     <script src="src/scripts/chat.js" type="module"></script>
     <script src="src/scripts/api/openai-api.js"></script>
-    <script src="src/scripts/api/testleaf-api.js"></script>
     </body>
     </html>
