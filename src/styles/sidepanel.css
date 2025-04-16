@@ -122,13 +122,20 @@ label {
   body {
     padding: 8px;
   }
-  
+
   .container {
     gap: 8px;
   }
 }
 
 /* Tab styles */
+
+#naturalTab .chat-container {
+  background-color: #26263a;
+  padding: 12px;
+  border-radius: 8px;
+}
+
 .tabs {
   display: flex;
   border-bottom: 2px solid #2cb134;

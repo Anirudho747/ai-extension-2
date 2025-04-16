@@ -91,25 +91,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Get reference to UI elements
     const providerSelect = document.getElementById('providerSelect');
     const modelSelect = document.getElementById('modelSelect');
     const groqApiKeyInput = document.getElementById('groqApiKey');
     const openaiApiKeyInput = document.getElementById('openaiApiKey');
-    const namingConventionSelect = document.getElementById('namingConvention'); // [NAMING CONVENTION]
+    const testleafApiKeyInput = document.getElementById('testleafApiKey');
 
     // Model options by provider
     const modelsByProvider = {
       groq: [
         { value: 'deepseek-r1-distill-llama-70b', label: 'deepseek-r1-distill-llama-70b' },
-        { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
-        { value: 'meta-llama/llama-4-maverick-17b-128e-instruct', label: 'meta-llama/llama-4-maverick-17b-128e-instruct' }
+        { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' }
       ],
       openai: [
         { value: 'gpt-4o', label: 'GPT-4o' },
         { value: 'o3-mini', label: 'o3-mini' },
         { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
         { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
+      ] ,
+      testleaf: [
+        { value: 'ft:gpt-4o-mini-2024-07-18:testleaf-1::B9AZjOmi', label: 'Testleaf' }
       ]
     };
 
@@ -156,6 +157,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
+    if (testleafApiKeyInput) {
+      testleafApiKeyInput.addEventListener('change', (e) => {
+        storage.set({ testleafApiKey: e.target.value });
+      });
+    }
+
     if (modelSelect) {
       modelSelect.addEventListener('change', (e) => {
         storage.set({ selectedModel: e.target.value });
@@ -163,28 +170,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // Save naming convention when changed
-    if (namingConventionSelect) {
-      namingConventionSelect.addEventListener('change', (e) => {
-        storage.set({ namingConvention: e.target.value }); // [NAMING CONVENTION]
-      });
-    }
-
     // Function to update API key input visibility
     function updateApiKeyVisibility(selectedModel) {
       const groqContainer = document.getElementById('groqKeyContainer');
       const openaiContainer = document.getElementById('openaiKeyContainer');
-      const testleafContainer = document.getElementById('testleafKeyContainer'); // testleafContainer still respected
+      const testleafContainer = document.getElementById('testleafKeyContainer');
 
       if (providerSelect.value === 'groq') {
         groqContainer.style.display = 'block';
         openaiContainer.style.display = 'none';
         testleafContainer.style.display = 'none';
-      } else if (providerSelect.value === 'openai') {
+
+      } else  if (providerSelect.value === 'openai') {
         groqContainer.style.display = 'none';
         openaiContainer.style.display = 'block';
         testleafContainer.style.display = 'none';
-      } else {
+      } else  {
         groqContainer.style.display = 'none';
         openaiContainer.style.display = 'none';
         testleafContainer.style.display = 'block';
@@ -193,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load saved values
     const result = await new Promise(resolve => {
-      storage.get(['groqApiKey', 'openaiApiKey', 'selectedModel', 'selectedProvider', 'namingConvention'], resolve);
+      storage.get(['groqApiKey', 'openaiApiKey','testleafApiKey', 'selectedModel', 'selectedProvider'], resolve);
     });
 
     if (result.selectedProvider && providerSelect) {
@@ -207,14 +208,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (result.openaiApiKey && openaiApiKeyInput) {
       openaiApiKeyInput.value = result.openaiApiKey;
     }
+    if (result.testleafApiKey && testleafApiKeyInput) {
+      testleafApiKeyInput.value = result.testleafApiKey;
+    }
     if (result.selectedModel && modelSelect) {
       modelSelect.value = result.selectedModel;
       updateApiKeyVisibility(result.selectedModel);
-    }
-
-    // Restore saved naming convention
-    if (result.namingConvention && namingConventionSelect) {
-      namingConventionSelect.value = result.namingConvention;
     }
 
     // DOM copy functionality
@@ -311,9 +310,11 @@ document.addEventListener('DOMContentLoaded', async () => {
               const allElements = clone.getElementsByTagName('*');
               for (let i = 0; i < allElements.length; i++) {
                 const element = allElements[i];
+                // Remove all event handlers
                 const attrs = element.attributes;
                 for (let j = attrs.length - 1; j >= 0; j--) {
                   const attrName = attrs[j].name;
+                  // Remove on* event handlers
                   if (attrName.startsWith('on')) {
                     element.removeAttribute(attrName);
                   }
@@ -325,6 +326,18 @@ document.addEventListener('DOMContentLoaded', async () => {
               while (noscripts.length > 0) {
                 noscripts[0].parentNode.removeChild(noscripts[0]);
               }
+
+              // Clean up style tags (optional, uncomment if you want to remove styles)
+              // const styles = clone.getElementsByTagName('style');
+              // while (styles.length > 0) {
+              //   styles[0].parentNode.removeChild(styles[0]);
+              // }
+
+              // Clean up link tags (optional, uncomment if you want to remove external resources)
+              // const links = clone.getElementsByTagName('link');
+              // while (links.length > 0) {
+              //   links[0].parentNode.removeChild(links[0]);
+              // }
 
               // Format the output with proper indentation
               const serializer = new XMLSerializer();
@@ -366,9 +379,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (message.type === 'UPDATE_CHANGES') {
           const formattedChanges = message.changes
               .map(change => {
-                return `[${change.timestamp}] ${change.type.toUpperCase()}
-Target: ${change.target.tagName} (${change.target.path})
-${change.added ? `Added: ${change.added.length} nodes\n` : ''}${change.removed ? `Removed: ${change.removed.length} nodes\n` : ''}${change.attributeName ? `Attribute: ${change.attributeName} changed from "${change.oldValue}" to "${change.newValue}"\n` : ''}-------------------\n`;
+                return `[${change.timestamp}] ${change.type.toUpperCase()}\n` +
+                    `Target: ${change.target.tagName} (${change.target.path})\n` +
+                    (change.added ? `Added: ${change.added.length} nodes\n` : '') +
+                    (change.removed ? `Removed: ${change.removed.length} nodes\n` : '') +
+                    (change.attributeName ? `Attribute: ${change.attributeName} changed from "${change.oldValue}" to "${change.newValue}"\n` : '') +
+                    '-------------------\n';
               })
               .join('\n');
 
