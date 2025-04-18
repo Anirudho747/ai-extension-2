@@ -687,19 +687,27 @@ class ComponentPage:
   /**
    Prompt for Natural Language Test Case Builder
    **/
-  SCENARIO_TEST_BUILDER: `
+  SCENARIO_FEATURE_ONLY: `
+    You are a senior automation engineer.
+    Write a complete Gherkin feature file for this UI scenario:
+
+    "\${scenario}"
+
+    Keep it short and realistic.
+    `,
+
+  SCENARIO_TEST_ONLY: `
   You are a senior automation engineer.
-  Write a \${outputLabel} for \${engine}, based ONLY on this scenario:
-  
-  "\${scenario}"
-  
-  Constraints:
-  - Use only what is likely visible on the current screen
-  - DO NOT assume other screens or flows (payment, checkout, profile, reset password, etc.)
-  - If you cannot complete a step realistically, say so
-  - Keep the output short, production-ready, and valid
-  `,
-};
+  Write a "\${language}" test method using "\${engine}" for the following feature file:
+
+  \`\`\`
+  "\${featureText}"
+  \`\`\`
+
+    Make it realistic. Use comments if you're unsure of element locators.
+    Return only the test method, wrapped in proper code block (triple backticks).
+    `,
+  };
 
 /**
  * Helper function to escape code blocks in prompts
@@ -718,25 +726,19 @@ export function getPrompt(promptKey, variables = {}) {
     throw new Error(`Prompt not found: ${promptKey}`);
   }
 
-  // Special handling for scenario prompt
-  if (promptKey === "SCENARIO_TEST_BUILDER") {
-    const type = variables.outputType;
-    if (type === "gherkin") {
-      variables.outputLabel = "Gherkin feature file";
-    } else if (type === "test") {
-      variables.outputLabel = `${variables.language} test method`;
-    } else {
-      variables.outputLabel = `Gherkin + ${variables.language} test`;
-    }
+  // Dynamic substitutions
+  if (promptKey === "SCENARIO_TEST_ONLY") {
+    variables.language = variables.language || "Java";
+    variables.engine = variables.engine || "Selenium";
+    variables.featureText = variables.featureText || "<feature missing>";
   }
 
-  // Replace template variables
-  Object.entries(variables).forEach(([k, v]) => {
-    const regex = new RegExp(`\\\${${k}}`, "g");
-    prompt = prompt.replace(regex, v);
-  });
+  if (promptKey === "SCENARIO_FEATURE_ONLY") {
+    variables.scenario = variables.scenario || "<scenario missing>";
+  }
 
-  return prompt.trim();
+  // Simple templating: replace ${var} with actual values
+  return prompt.replace(/\$\{(.*?)\}/g, (_, key) => variables[key] || "");
 }
 
 export const CODE_GENERATOR_TYPES = {
@@ -751,5 +753,6 @@ export const CODE_GENERATOR_TYPES = {
   WEBDRIVERIO_TYPESCRIPT_CODE_GENERATION: 'WebdriverIO-TS-Page-Generator',
   WEBDRIVERIO_TYPESCRIPT_PAGE_ONLY: 'WebdriverIO-TS-Code-Generator',
   CUCUMBER_ONLY: 'Cucumber-Only',
-  SCENARIO_TEST_BUILDER: 'Scenario-Test-Builder'
+  SCENARIO_FEATURE_ONLY: 'Scenario-Feature-Only',
+  SCENARIO_TEST_ONLY: 'Scenario-Test-Only'
 };

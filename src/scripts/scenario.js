@@ -1,8 +1,9 @@
-// scenario.js
+// scenario.js (Final: Two-Step Prompt Strategy)
 
 import { getPrompt } from "./prompts.js";
 
-// DOM Elements
+// No need to import Groq/OpenAI/Testleaf directly — using window globals
+
 const scenarioInput = document.getElementById("scenarioInput");
 const scenarioOutputType = document.getElementById("scenarioOutputType");
 const generateBtn = document.getElementById("generateScenario");
@@ -10,7 +11,6 @@ const scenarioMessages = document.getElementById("scenarioMessages");
 const scenarioLoading = document.getElementById("scenarioLoading");
 const scenarioToast = document.getElementById("scenarioToast");
 
-// Render messages in chat style
 function appendMessage(role, content) {
     const message = document.createElement("div");
     message.className = role === "user" ? "user-message" : "ai-message";
@@ -19,7 +19,6 @@ function appendMessage(role, content) {
     scenarioMessages.scrollTop = scenarioMessages.scrollHeight;
 }
 
-// Show/hide toast warning
 function showToast() {
     scenarioToast.style.display = "block";
     setTimeout(() => {
@@ -27,12 +26,10 @@ function showToast() {
     }, 5000);
 }
 
-// Show/hide loading spinner
 function showLoading(show) {
     scenarioLoading.style.display = show ? "block" : "none";
 }
 
-// Main handler for scenario generation
 async function generateScenarioCode() {
     const scenarioText = scenarioInput.value.trim();
     const outputType = scenarioOutputType.value;
@@ -42,7 +39,6 @@ async function generateScenarioCode() {
     appendMessage("user", scenarioText);
     showLoading(true);
 
-    // Load config and keys
     chrome.storage.sync.get(
         [
             "selectedProvider",
@@ -66,39 +62,58 @@ async function generateScenarioCode() {
                 currentScreenElements = []
             } = config;
 
-            const prompt = getPrompt("SCENARIO_TEST_BUILDER", {
-                scenario: scenarioText,
-                outputType,
-                language: languageBinding,
-                engine: browserEngine
-            });
+            const providerClient =
+                selectedProvider === "openai"
+                    ? new window.OpenAIAPI(openaiApiKey)
+                    : selectedProvider === "testleaf"
+                        ? new window.TestleafAPI(testleafApiKey)
+                        : selectedProvider === "groq"
+                            ? new window.GroqAPI(groqApiKey)
+                            : null;
 
-            let response = null;
+            if (!providerClient) {
+                showLoading(false);
+                appendMessage("ai", "❌ Unsupported provider selected.");
+                return;
+            }
+
+            let featureResponse;
             try {
-                if (selectedProvider === "openai") {
-                    const client1 = new window.OpenAIAPI(openaiApiKey);
-                    response = await client1.sendMessage(prompt, selectedModel);
-                } else if (selectedProvider === "testleaf") {
-                    const client2 = new window.TestleafAPI(testleafApiKey);
-                    response = await client2.sendMessage(prompt, selectedModel);
-                } else if (selectedProvider === "groq") {
-                    const client3 = new GroqAPI(groqApiKey); // ✅ now using default import
-                    response = await client3.sendMessage(prompt, selectedModel);
-                } else {
-                    response = { content: "❌ Unsupported provider selected." };
-                }
+                const prompt1 = getPrompt("SCENARIO_FEATURE_ONLY", {
+                    scenario: scenarioText
+                });
+                featureResponse = await providerClient.sendMessage(prompt1, selectedModel);
+                appendMessage("ai", featureResponse.content);
             } catch (err) {
-                response = { content: `❌ Error: ${err.message}` };
+                showLoading(false);
+                appendMessage("ai", `❌ Error during feature generation: ${err.message}`);
+                return;
+            }
+
+            // Stop if user selected only Gherkin
+            if (outputType === "gherkin") {
+                showLoading(false);
+                return;
+            }
+
+            let testResponse;
+            try {
+                const prompt2 = getPrompt("SCENARIO_TEST_ONLY", {
+                    featureText: featureResponse.content,
+                    language: languageBinding,
+                    engine: browserEngine
+                });
+                testResponse = await providerClient.sendMessage(prompt2, selectedModel);
+                appendMessage("ai", testResponse.content);
+            } catch (err) {
+                appendMessage("ai", `❌ Error during test code generation: ${err.message}`);
             }
 
             showLoading(false);
-            appendMessage("ai", response.content);
 
-            // === Option 2: DOM-aware Validation (LLM Self-check + Current Screen Match) ===
-            const allText = `${scenarioText} ${response.content}`.toLowerCase();
+            const allText = `${scenarioText} ${featureResponse?.content || ""} ${testResponse?.content || ""}`.toLowerCase();
             const domKeywords = currentScreenElements.map(el => el.toLowerCase());
             const hasAnyDOMMatch = domKeywords.some(keyword => allText.includes(keyword));
-
             if (!hasAnyDOMMatch) {
                 showToast();
             }
@@ -106,5 +121,4 @@ async function generateScenarioCode() {
     );
 }
 
-// Hook up event listener
 generateBtn.addEventListener("click", generateScenarioCode);
