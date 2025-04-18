@@ -39,86 +39,73 @@ async function generateScenarioCode() {
     appendMessage("user", scenarioText);
     showLoading(true);
 
-    chrome.storage.sync.get(
-        [
-            "selectedProvider",
-            "selectedModel",
-            "languageBinding",
-            "browserEngine",
-            "groqApiKey",
-            "openaiApiKey",
-            "testleafApiKey",
-            "currentScreenElements"
-        ],
-        async (config) => {
-            const {
-                selectedProvider,
-                selectedModel,
-                languageBinding,
-                browserEngine,
-                groqApiKey,
-                openaiApiKey,
-                testleafApiKey,
-                currentScreenElements = []
-            } = config;
+    // ✅ Get the live values from the dropdowns directly
+    const languageBinding = document.getElementById("languageBinding")?.value || "Java";
+    const browserEngine = document.getElementById("browserEngine")?.value || "Selenium";
+    const selectedProvider = document.getElementById("providerSelect")?.value || "openai";
+    const selectedModel = document.getElementById("modelSelect")?.value || "mixtral-8x7b";
+    const groqApiKey = document.getElementById("groqApiKey")?.value || "";
+    const openaiApiKey = document.getElementById("openaiApiKey")?.value || "";
+    const testleafApiKey = document.getElementById("testleafApiKey")?.value || "";
 
-            const providerClient =
-                selectedProvider === "openai"
-                    ? new window.OpenAIAPI(openaiApiKey)
-                    : selectedProvider === "testleaf"
-                        ? new window.TestleafAPI(testleafApiKey)
-                        : selectedProvider === "groq"
-                            ? new window.GroqAPI(groqApiKey)
-                            : null;
+    const currentScreenElements = []; // Optional: enhance later if needed
 
-            if (!providerClient) {
-                showLoading(false);
-                appendMessage("ai", "❌ Unsupported provider selected.");
-                return;
-            }
+    console.log("🌐 From DOM:", { languageBinding, browserEngine, selectedProvider, selectedModel });
 
-            let featureResponse;
-            try {
-                const prompt1 = getPrompt("SCENARIO_FEATURE_ONLY", {
-                    scenario: scenarioText
-                });
-                featureResponse = await providerClient.sendMessage(prompt1, selectedModel);
-                appendMessage("ai", featureResponse.content);
-            } catch (err) {
-                showLoading(false);
-                appendMessage("ai", `❌ Error during feature generation: ${err.message}`);
-                return;
-            }
+    let providerClient =
+        selectedProvider === "openai"
+            ? new window.OpenAIAPI(openaiApiKey)
+            : selectedProvider === "testleaf"
+                ? new window.TestleafAPI(testleafApiKey)
+                : selectedProvider === "groq"
+                    ? new window.GroqAPI(groqApiKey)
+                    : null;
 
-            // Stop if user selected only Gherkin
-            if (outputType === "gherkin") {
-                showLoading(false);
-                return;
-            }
+    if (!providerClient) {
+        showLoading(false);
+        appendMessage("ai", "❌ Unsupported provider selected.");
+        return;
+    }
 
-            let testResponse;
-            try {
-                const prompt2 = getPrompt("SCENARIO_TEST_ONLY", {
-                    featureText: featureResponse.content,
-                    language: languageBinding,
-                    engine: browserEngine
-                });
-                testResponse = await providerClient.sendMessage(prompt2, selectedModel);
-                appendMessage("ai", testResponse.content);
-            } catch (err) {
-                appendMessage("ai", `❌ Error during test code generation: ${err.message}`);
-            }
+    let featureResponse;
+    try {
+        const prompt1 = getPrompt("SCENARIO_FEATURE_ONLY", {
+            scenario: scenarioText
+        });
+        featureResponse = await providerClient.sendMessage(prompt1, selectedModel);
+        appendMessage("ai", featureResponse.content);
+    } catch (err) {
+        showLoading(false);
+        appendMessage("ai", `❌ Error during feature generation: ${err.message}`);
+        return;
+    }
 
-            showLoading(false);
+    if (outputType === "gherkin") {
+        showLoading(false);
+        return;
+    }
 
-            const allText = `${scenarioText} ${featureResponse?.content || ""} ${testResponse?.content || ""}`.toLowerCase();
-            const domKeywords = currentScreenElements.map(el => el.toLowerCase());
-            const hasAnyDOMMatch = domKeywords.some(keyword => allText.includes(keyword));
-            if (!hasAnyDOMMatch) {
-                showToast();
-            }
-        }
-    );
+    let testResponse;
+    try {
+        const prompt2 = getPrompt("SCENARIO_TEST_ONLY", {
+            featureText: featureResponse.content,
+            language: languageBinding,
+            engine: browserEngine
+        });
+        console.log("🧠 Prompt for test method:\n", prompt2);
+        testResponse = await providerClient.sendMessage(prompt2, selectedModel);
+        appendMessage("ai", testResponse.content);
+    } catch (err) {
+        appendMessage("ai", `❌ Error during test code generation: ${err.message}`);
+    }
+
+    showLoading(false);
+
+    const allText = `${scenarioText} ${featureResponse?.content || ""} ${testResponse?.content || ""}`.toLowerCase();
+    const hasAnyDOMMatch = currentScreenElements.some(keyword => allText.includes(keyword.toLowerCase()));
+    if (!hasAnyDOMMatch) {
+        showToast();
+    }
 }
 
 generateBtn.addEventListener("click", generateScenarioCode);

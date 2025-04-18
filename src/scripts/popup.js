@@ -108,9 +108,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         { value: 'o3-mini', label: 'o3-mini' },
         { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
         { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
-      ] ,
-      testleaf: [
-        { value: 'ft:gpt-4o-mini-2024-07-18:testleaf-1::B9AZjOmi', label: 'Testleaf' }
       ]
     };
 
@@ -174,27 +171,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateApiKeyVisibility(selectedModel) {
       const groqContainer = document.getElementById('groqKeyContainer');
       const openaiContainer = document.getElementById('openaiKeyContainer');
-      const testleafContainer = document.getElementById('testleafKeyContainer');
 
       if (providerSelect.value === 'groq') {
         groqContainer.style.display = 'block';
         openaiContainer.style.display = 'none';
-        testleafContainer.style.display = 'none';
-
       } else  if (providerSelect.value === 'openai') {
         groqContainer.style.display = 'none';
-        openaiContainer.style.display = 'block';
-        testleafContainer.style.display = 'none';
+        openaiContainer.style.display = 'block';;
       } else  {
         groqContainer.style.display = 'none';
         openaiContainer.style.display = 'none';
-        testleafContainer.style.display = 'block';
       }
     }
 
     // Load saved values
     const result = await new Promise(resolve => {
-      storage.get(['groqApiKey', 'openaiApiKey','testleafApiKey', 'selectedModel', 'selectedProvider'], resolve);
+      storage.get(['groqApiKey', 'openaiApiKey', 'selectedModel', 'selectedProvider'], resolve);
     });
 
     if (result.selectedProvider && providerSelect) {
@@ -207,9 +199,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (result.openaiApiKey && openaiApiKeyInput) {
       openaiApiKeyInput.value = result.openaiApiKey;
-    }
-    if (result.testleafApiKey && testleafApiKeyInput) {
-      testleafApiKeyInput.value = result.testleafApiKey;
     }
     if (result.selectedModel && modelSelect) {
       modelSelect.value = result.selectedModel;
