@@ -173,3 +173,149 @@ if (!window.domObserver) {
     window.domObserver = new window.DOMObserver();
     window.domObserver.init();
 }
+
+(function autoCaptureVisibleDOM() {
+    function isElementVisible(el) {
+        const style = window.getComputedStyle(el);
+        return (
+            style.display !== "none" &&
+            style.visibility !== "hidden" &&
+            el.offsetParent !== null
+        );
+    }
+
+    function getReadableDescription(el) {
+        const tag = el.tagName.toLowerCase();
+        const text = (el.textContent || "").trim();
+        const placeholder = el.getAttribute("placeholder");
+        const aria = el.getAttribute("aria-label");
+        const nameAttr = el.getAttribute("name");
+        let label = text || placeholder || aria || nameAttr || "";
+
+        // Simplify long content
+        if (label.length > 50) label = label.substring(0, 50) + "...";
+
+        // Return natural sentence
+        if (tag === "input" || tag === "textarea") {
+            return `Input with label "${label}"`;
+        } else if (tag === "button") {
+            return `Button with text "${label}"`;
+        } else if (["h1", "h2", "h3", "h4", "h5", "h6", "label", "span", "div", "a"].includes(tag)) {
+            return `${tag.charAt(0).toUpperCase() + tag.slice(1)} with text "${label}"`;
+        }
+
+        return null;
+    }
+
+    function collectScreenElements() {
+        const tagsToScan = ["input", "button", "textarea", "select", "label", "a", "span", "div", "h1", "h2", "h3", "h4", "h5", "h6"];
+        const result = [];
+
+        tagsToScan.forEach(tag => {
+            document.querySelectorAll(tag).forEach(el => {
+                if (!isElementVisible(el)) return;
+
+                const readable = getReadableDescription(el);
+                if (readable) {
+                    result.push(readable);
+                }
+            });
+        });
+
+        chrome.storage.sync.set({ currentScreenElements: result });
+        console.log("✅ Stored structured DOM elements:", result);
+    }
+
+    let debounceTimer;
+    const debounce = (fn, delay) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fn, delay);
+    };
+
+    window.addEventListener("load", () => {
+        debounce(collectScreenElements, 500);
+    });
+
+    const observer = new MutationObserver(() => {
+        debounce(collectScreenElements, 1000);
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true
+    });
+})();
+
+(function autoCaptureVisibleDOM() {
+    function isElementVisible(el) {
+        const style = window.getComputedStyle(el);
+        return (
+            style.display !== "none" &&
+            style.visibility !== "hidden" &&
+            el.offsetParent !== null
+        );
+    }
+
+    function getMetadata(el) {
+        const tag = el.tagName.toLowerCase();
+        const text = (el.textContent || "").trim();
+        const placeholder = el.getAttribute("placeholder");
+        const aria = el.getAttribute("aria-label");
+        const nameAttr = el.getAttribute("name");
+
+        const label = text || placeholder || aria || nameAttr || "";
+
+        let selector = "";
+        if (placeholder) {
+            selector = `${tag}[placeholder="${placeholder}"]`;
+        } else if (aria) {
+            selector = `${tag}[aria-label="${aria}"]`;
+        } else if (nameAttr) {
+            selector = `${tag}[name="${nameAttr}"]`;
+        } else if (text) {
+            selector = `${tag}:contains("${text}")`; // fallback
+        }
+
+        return label && selector
+            ? { label: label.toLowerCase(), tag, selector }
+            : null;
+    }
+
+    function collectScreenElements() {
+        const tagsToScan = ["input", "button", "textarea", "select", "label", "a", "span", "div", "h1", "h2", "h3"];
+        const enrichedElements = [];
+
+        tagsToScan.forEach(tag => {
+            document.querySelectorAll(tag).forEach(el => {
+                if (!isElementVisible(el)) return;
+                const meta = getMetadata(el);
+                if (meta) enrichedElements.push(meta);
+            });
+        });
+
+        chrome.storage.sync.set({ screenElementsMeta: enrichedElements });
+        console.log("✅ Stored DOM metadata for AI Matching", enrichedElements);
+    }
+
+    let debounceTimer;
+    const debounce = (fn, delay) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fn, delay);
+    };
+
+    window.addEventListener("load", () => {
+        debounce(collectScreenElements, 500);
+    });
+
+    const observer = new MutationObserver(() => {
+        debounce(collectScreenElements, 1000);
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true
+    });
+})();
+

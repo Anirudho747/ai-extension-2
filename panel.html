@@ -18,7 +18,7 @@
   <div class="tabs">
     <button class="tab-button active" data-tab="settings">Configuration</button>
     <button class="tab-button" data-tab="chat">Code Generator</button>
-    <button class="tab-button" data-tab="natural">Natural Language Tests</button>
+<!--    <button class="tab-button" data-tab="natural">Natural Language Tests</button>-->
   </div>
 
   <!-- ========== CODE GENERATOR TAB ========== -->
@@ -136,51 +136,51 @@
   </div>
 
   <!-- ========== NATURAL LANGUAGE TESTS TAB ========== -->
-  <div id="naturalTab" class="tab-content">
-    <!-- Scenario Input + Options -->
-    <div class="generator-options" style="display: flex; flex-direction: column; gap: 12px; max-width: 700px; margin: 8px 0;">
+<!--  <div id="naturalTab" class="tab-content">-->
+<!--    &lt;!&ndash; Scenario Input + Options &ndash;&gt;-->
+<!--    <div class="generator-options" style="display: flex; flex-direction: column; gap: 12px; max-width: 700px; margin: 8px 0;">-->
 
-      <!-- Text Area on Top -->
-      <textarea
-              id="scenarioInput"
-              rows="1"
-              placeholder="Describe your test scenario (e.g., 'User logs in with valid credentials')"
-              style="width: 100%; padding: 8px; resize: vertical;"
-      ></textarea>
+<!--      &lt;!&ndash; Text Area on Top &ndash;&gt;-->
+<!--      <textarea-->
+<!--              id="scenarioInput"-->
+<!--              rows="1"-->
+<!--              placeholder="Describe your test scenario (e.g., 'User logs in with valid credentials')"-->
+<!--              style="width: 100%; padding: 8px; resize: vertical;"-->
+<!--      ></textarea>-->
 
-      <!-- Dropdown + Button Row -->
-      <div style="display: flex; gap: 12px;">
-        <select id="scenarioOutputType" style="flex: 1; height: 40px;">
-          <option value="gherkin">Gherkin Only</option>
-          <option value="test">Test Method Only</option>
-          <option value="both" selected>Both</option>
-        </select>
+<!--      &lt;!&ndash; Dropdown + Button Row &ndash;&gt;-->
+<!--      <div style="display: flex; gap: 12px;">-->
+<!--        <select id="scenarioOutputType" style="flex: 1; height: 40px;">-->
+<!--          <option value="gherkin">Gherkin Only</option>-->
+<!--          <option value="test">Test Method Only</option>-->
+<!--          <option value="both" selected>Both</option>-->
+<!--        </select>-->
 
-        <button id="generateScenario" class="inspector-toggle" style="height: 40px; min-width: 120px;">
-          <i class="fa-solid fa-magic"></i>
-          <span>Generate</span>
-        </button>
-      </div>
-    </div>
-  </div>
+<!--        <button id="generateScenario" class="inspector-toggle" style="height: 40px; min-width: 120px;">-->
+<!--          <i class="fa-solid fa-magic"></i>-->
+<!--          <span>Generate</span>-->
+<!--        </button>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 
 
-  <!-- Toast bar for off-screen validation warning -->
-    <div id="scenarioToast" class="toast" style="display: none; margin-bottom: 8px; background-color: #ff4c4c; color: white; padding: 8px 12px; border-radius: 4px; font-weight: 500;">
-      Please restrict yourself only to current screen shown.
-    </div>
+<!--  &lt;!&ndash; Toast bar for off-screen validation warning &ndash;&gt;-->
+<!--    <div id="scenarioToast" class="toast" style="display: none; margin-bottom: 8px; background-color: #ff4c4c; color: white; padding: 8px 12px; border-radius: 4px; font-weight: 500;">-->
+<!--      Please restrict yourself only to current screen shown.-->
+<!--    </div>-->
 
-    <!-- Chat-style response area -->
-    <div class="chat-container">
-      <div class="chat-messages" id="scenarioMessages">
-        <div class="loading-container" id="scenarioLoading" style="display: none;">
-          <div class="loading-spinner"></div>
-          <div class="loading-text">Generating test case...</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!--    &lt;!&ndash; Chat-style response area &ndash;&gt;-->
+<!--    <div class="chat-container">-->
+<!--      <div class="chat-messages" id="scenarioMessages">-->
+<!--        <div class="loading-container" id="scenarioLoading" style="display: none;">-->
+<!--          <div class="loading-spinner"></div>-->
+<!--          <div class="loading-text">Generating test case...</div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
 
 <!-- ========== SCRIPTS ========== -->
 <script src="src/scripts/popup.js"></script>
@@ -188,6 +188,6 @@
 <script src="src/scripts/api/groq-api.js"></script>
 <script src="src/scripts/chat.js" type="module"></script>
 <script src="src/scripts/api/openai-api.js"></script>
-<script src="src/scripts/scenario.js" type="module"></script>
+<!--<script src="src/scripts/scenario.js" type="module"></script>-->
 </body>
 </html>

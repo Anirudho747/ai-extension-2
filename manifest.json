@@ -3,7 +3,7 @@
 
     "manifest_version": 3,
     "name": "CodeGenerator-Sky",
-    "version": "2.59",
+    "version": "2.77",
     "description": "Test automation code generator using Generative AI",
     "permissions": [
         "activeTab",
