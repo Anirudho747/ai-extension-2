@@ -1,14 +1,20 @@
-// scenario.js (Final: Two-Step Prompt Strategy)
-
 import { getPrompt } from "./prompts.js";
 
 // Reuse existing UI bindings
 const scenarioInput = document.getElementById("scenarioInput");
 const scenarioOutputType = document.getElementById("scenarioOutputType");
 const generateScenarioButton = document.getElementById("generateScenario");
+const refreshDomButton = document.getElementById("refreshDomButton");
+const copyOutputButton = document.getElementById("copyOutput");
+const copyMenu = document.getElementById("copyMenu");
+const copyGherkinButton = document.getElementById("copyGherkin");
+const copyTestButton = document.getElementById("copyTest");
 const scenarioMessages = document.getElementById("scenarioMessages");
 const scenarioToast = document.getElementById("scenarioToast");
 const scenarioLoading = document.getElementById("scenarioLoading");
+
+let lastGherkinContent = "";
+let lastTestContent = "";
 
 function appendMessage(role, content) {
     const msgEl = document.createElement("div");
@@ -26,7 +32,13 @@ function showLoading(show = true) {
     scenarioLoading.style.display = show ? "flex" : "none";
 }
 
-// 🧠 New: Fuzzy Selector Matching
+function copyTextToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        console.log("✅ Copied to clipboard");
+    }).catch(err => console.error("❌ Copy failed", err));
+}
+
+// 🧠 Fuzzy Selector Matching (Hybrid)
 function getBestSelectorMatch(aiText, screenElementsMeta) {
     const lowerText = aiText.toLowerCase();
     for (const el of screenElementsMeta) {
@@ -35,6 +47,16 @@ function getBestSelectorMatch(aiText, screenElementsMeta) {
         }
     }
     return null;
+}
+
+async function refreshScreenElements() {
+    chrome.runtime.sendMessage({ type: "REFRESH_SCREEN_ELEMENTS" }, (response) => {
+        if (chrome.runtime.lastError) {
+            console.error("❌ Error refreshing screen elements:", chrome.runtime.lastError.message);
+            return;
+        }
+        console.log("🔄 DOM refreshed:", response);
+    });
 }
 
 async function generateScenarioCode() {
@@ -47,54 +69,39 @@ async function generateScenarioCode() {
     showLoading(true);
 
     let screenElementsMeta = [];
-    // Config from storage
     let selectedProvider, selectedModel, languageBinding, browserEngine;
     let groqApiKey, openaiApiKey, testleafApiKey;
 
     await new Promise((resolve) => {
-        chrome.storage.sync.get(
-            [
-                "selectedProvider",
-                "selectedModel",
-                "languageBinding",
-                "browserEngine",
-                "groqApiKey",
-                "openaiApiKey",
-                "testleafApiKey",
-                "screenElementsMeta",
-            ],
-            (config) => {
-                selectedProvider = config.selectedProvider;
-                selectedModel = config.selectedModel;
-                languageBinding = config.languageBinding || "Java";
-                browserEngine = config.browserEngine || "Selenium";
-                groqApiKey = config.groqApiKey;
-                openaiApiKey = config.openaiApiKey;
-                testleafApiKey = config.testleafApiKey;
-                screenElementsMeta = config.screenElementsMeta || [];
-                resolve();
-            }
-        );
+        chrome.storage.sync.get([
+            "selectedProvider", "selectedModel", "languageBinding", "browserEngine",
+            "groqApiKey", "openaiApiKey", "testleafApiKey", "screenElementsMeta"
+        ], (config) => {
+            selectedProvider = config.selectedProvider;
+            selectedModel = config.selectedModel;
+            languageBinding = config.languageBinding || "Java";
+            browserEngine = config.browserEngine || "Selenium";
+            groqApiKey = config.groqApiKey;
+            openaiApiKey = config.openaiApiKey;
+            testleafApiKey = config.testleafApiKey;
+            screenElementsMeta = config.screenElementsMeta || [];
+            resolve();
+        });
     });
 
-    // Override live dropdowns
+    if (!screenElementsMeta.length) {
+        console.warn("⚠️ No screen elements captured. Allowing generation.");
+    }
+
+    // Override live dropdowns if any
     languageBinding = document.getElementById("languageBinding")?.value || languageBinding;
     browserEngine = document.getElementById("browserEngine")?.value || browserEngine;
-    selectedProvider = document.getElementById("providerSelect")?.value || selectedProvider;
-    selectedModel = document.getElementById("modelSelect")?.value || selectedModel;
-    groqApiKey = document.getElementById("groqApiKey")?.value || groqApiKey;
-    openaiApiKey = document.getElementById("openaiApiKey")?.value || openaiApiKey;
-    testleafApiKey = document.getElementById("testleafApiKey")?.value || testleafApiKey;
 
-    // 🔌 LLM bindings
     let providerClient =
-        selectedProvider === "openai"
-            ? new window.OpenAIAPI(openaiApiKey)
-            : selectedProvider === "testleaf"
-                ? new window.TestleafAPI(testleafApiKey)
-                : selectedProvider === "groq"
-                    ? new window.GroqAPI(groqApiKey)
-                    : null;
+        selectedProvider === "openai" ? new window.OpenAIAPI(openaiApiKey) :
+            selectedProvider === "testleaf" ? new window.TestleafAPI(testleafApiKey) :
+                selectedProvider === "groq" ? new window.GroqAPI(groqApiKey) :
+                    null;
 
     if (!providerClient) {
         showLoading(false);
@@ -102,32 +109,33 @@ async function generateScenarioCode() {
         return;
     }
 
-    // 1️⃣ Gherkin prompt
+    // 1️⃣ Gherkin feature prompt
     let featureResponse;
     try {
-        const elementHints =
-            screenElementsMeta.length > 0
-                ? `The following elements are visible:\n${screenElementsMeta.map((el) => `- ${el.tag} with label "${el.label}"`).join("\n")}`
-                : "";
+        const elementHints = screenElementsMeta.length > 0
+            ? `The following elements are visible:\n${screenElementsMeta.map((el) => `- ${el.tag} with label \"${el.label}\"`).join("\n")}`
+            : "";
 
         const prompt1 = getPrompt("SCENARIO_FEATURE_ONLY", {
-            scenario: `${scenarioText}\n\n${elementHints}\n\nOnly use elements that are visible on the screen.`,
+            scenario: `${scenarioText}\n\n${elementHints}\n\nOnly use elements visible on current screen.`,
         });
 
         featureResponse = await providerClient.sendMessage(prompt1, selectedModel);
         appendMessage("ai", featureResponse.content);
+        lastGherkinContent = featureResponse.content;
     } catch (err) {
         showLoading(false);
         appendMessage("ai", `❌ Error during feature generation: ${err.message}`);
         return;
     }
 
-    // 2️⃣ Optional: Generate test method
     if (outputType === "gherkin") {
+        copyOutputButton.disabled = false;
         showLoading(false);
         return;
     }
 
+    // 2️⃣ Optional Test Method
     try {
         const prompt2 = getPrompt("SCENARIO_TEST_ONLY", {
             featureText: featureResponse.content,
@@ -136,42 +144,30 @@ async function generateScenarioCode() {
         });
 
         const testResponse = await providerClient.sendMessage(prompt2, selectedModel);
-
-        // 🧠 Hybrid Match: Try patching selector
-        let patchedCode = testResponse.content;
-        let matched = false;
-
-        for (const el of screenElementsMeta) {
-            const labelLower = el.label.toLowerCase();
-            const aiOutputLower = testResponse.content.toLowerCase();
-
-            if (aiOutputLower.includes(labelLower)) {
-                const byIdRegex = /By\.id\(["'][^"']+["']\)/gi;
-                const byNameRegex = /By\.name\(["'][^"']+["']\)/gi;
-                const byXpathRegex = /By\.xpath\(["'][^"']+["']\)/gi;
-
-                patchedCode = patchedCode
-                    .replace(byIdRegex, `By.cssSelector("${el.selector}")`)
-                    .replace(byNameRegex, `By.cssSelector("${el.selector}")`)
-                    .replace(byXpathRegex, `By.cssSelector("${el.selector}")`);
-
-                matched = true;
-            }
-        }
-
-        console.log("🤖 Original Test Code:", testResponse.content);
-        console.log("🧠 Final Patched Code:", patchedCode);
-        console.log("📋 Matched:", matched);
-
-
-        appendMessage("ai", patchedCode);
-        if (!matched) showToast();
+        appendMessage("ai", testResponse.content);
+        lastTestContent = testResponse.content;
     } catch (err) {
         appendMessage("ai", `❌ Error during test code generation: ${err.message}`);
     }
 
+    copyOutputButton.disabled = false;
     showLoading(false);
 }
 
-// Attach event
+// Attach events
 generateScenarioButton.addEventListener("click", generateScenarioCode);
+refreshDomButton.addEventListener("click", refreshScreenElements);
+
+copyOutputButton.addEventListener("click", () => {
+    copyMenu.style.display = copyMenu.style.display === "none" ? "flex" : "none";
+});
+
+copyGherkinButton.addEventListener("click", () => {
+    copyTextToClipboard(lastGherkinContent);
+    copyMenu.style.display = "none";
+});
+
+copyTestButton.addEventListener("click", () => {
+    copyTextToClipboard(lastTestContent);
+    copyMenu.style.display = "none";
+});

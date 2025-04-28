@@ -3,13 +3,17 @@
 
     "manifest_version": 3,
     "name": "CodeGenerator-Sky",
-    "version": "2.77",
+    "version": "2.86",
     "description": "Test automation code generator using Generative AI",
     "permissions": [
         "activeTab",
         "scripting",
         "sidePanel",
         "storage"
+    ],
+    "host_permissions": [
+        "http://*/*",
+        "https://*/*"
     ],
     "action": {
         "default_title": "mAgIc",
@@ -29,6 +33,13 @@
     "side_panel": {
         "default_path": "panel.html"
     },
+    "content_scripts": [
+        {
+            "matches": ["https://*/*", "http://*/*"],
+            "js": ["src/content-script.js"],
+            "run_at": "document_idle"
+        }
+    ],
     "background": {
         "service_worker": "bg.js"
     },
@@ -38,7 +49,8 @@
             "lib/prism/prism.js",
             "lib/prism/prism-typescript.js",
             "lib/prism/prism-tomorrow.css",
-            "src/content/content.js"
+            "src/content/content.js",
+            "src/content-script.js"
         ],
         "matches": ["<all_urls>"]
     }],

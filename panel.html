@@ -9,6 +9,23 @@
   <script src="lib/prism/prism-typescript.js"></script>
   <link href="lib/prism/prism-tomorrow.css" rel="stylesheet">
   <link href="src/styles/sidepanel.css" rel="stylesheet">
+
+<style>
+  /* 🔥 Only for Copy Menu fix without touching other tabs */
+  #copyMenu {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    background: #333;
+    color: white;
+    border-radius: 6px;
+    display: none;
+    flex-direction: column;
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    margin-top: 4px;
+  }
+</style>
 </head>
 
 <body>
@@ -18,7 +35,7 @@
   <div class="tabs">
     <button class="tab-button active" data-tab="settings">Configuration</button>
     <button class="tab-button" data-tab="chat">Code Generator</button>
-<!--    <button class="tab-button" data-tab="natural">Natural Language Tests</button>-->
+    <button class="tab-button" data-tab="natural">Natural Language Tests</button>
   </div>
 
   <!-- ========== CODE GENERATOR TAB ========== -->
@@ -135,52 +152,61 @@
     </div>
   </div>
 
-  <!-- ========== NATURAL LANGUAGE TESTS TAB ========== -->
-<!--  <div id="naturalTab" class="tab-content">-->
-<!--    &lt;!&ndash; Scenario Input + Options &ndash;&gt;-->
-<!--    <div class="generator-options" style="display: flex; flex-direction: column; gap: 12px; max-width: 700px; margin: 8px 0;">-->
+  <!--========== NATURAL LANGUAGE TESTS TAB ========== -->
+<div id="naturalTab" class="tab-content">
+ <!-- Scenario Input + Options -->
+  <!-- Top Control Buttons -->
+  <div class="generator-controls" style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <button id="refreshDomButton" class="inspector-toggle">
+      <i class="fas fa-sync-alt"></i> Refresh Elements
+    </button>
+  </div>
 
-<!--      &lt;!&ndash; Text Area on Top &ndash;&gt;-->
-<!--      <textarea-->
-<!--              id="scenarioInput"-->
-<!--              rows="1"-->
-<!--              placeholder="Describe your test scenario (e.g., 'User logs in with valid credentials')"-->
-<!--              style="width: 100%; padding: 8px; resize: vertical;"-->
-<!--      ></textarea>-->
+  <!-- Scenario Input and Options -->
+  <div class="generator-options" style="display: flex; flex-direction: column; gap: 8px;">
+    <textarea id="scenarioInput" rows="2" placeholder="Describe your test scenario (e.g., 'User logs in with valid credentials')" style="width: 100%;"></textarea>
+    <select id="scenarioOutputType" style="width: 200px;">
+<!--      <option value="gherkin">Gherkin Only</option>-->
+<!--      <option value="test">Test Method Only</option>-->
+      <option value="both" selected>Both</option>
+    </select>
+  </div>
 
-<!--      &lt;!&ndash; Dropdown + Button Row &ndash;&gt;-->
-<!--      <div style="display: flex; gap: 12px;">-->
-<!--        <select id="scenarioOutputType" style="flex: 1; height: 40px;">-->
-<!--          <option value="gherkin">Gherkin Only</option>-->
-<!--          <option value="test">Test Method Only</option>-->
-<!--          <option value="both" selected>Both</option>-->
-<!--        </select>-->
+  <!-- Generate and Copy Buttons -->
+  <div class="generator-controls" style="display: flex; gap: 10px; margin-top: 10px;">
+    <button id="generateScenario" class="inspector-toggle">
+      <i class="fa-solid fa-magic"></i> Generate
+    </button>
+    <div style="position: relative;">
+      <button id="copyOutput" class="inspector-toggle" disabled>
+        <i class="fas fa-copy"></i> Copy
+      </button>
+      <!-- Copy Options Menu (hidden initially) -->
+      <div id="copyMenu" style="position: absolute; top: 40px; left: 0; background: #333; color: white; border-radius: 6px; display: none; flex-direction: column; box-shadow: 0px 0px 8px rgba(0,0,0,0.3);">
+        <button id="copyGherkin" style="background: none; border: none; padding: 8px 12px; text-align: left; cursor: pointer;">Copy Gherkin</button>
+        <button id="copyTest" style="background: none; border: none; padding: 8px 12px; text-align: left; cursor: pointer;">Copy Test Code</button>
+      </div>
+    </div>
+  </div>
 
-<!--        <button id="generateScenario" class="inspector-toggle" style="height: 40px; min-width: 120px;">-->
-<!--          <i class="fa-solid fa-magic"></i>-->
-<!--          <span>Generate</span>-->
-<!--        </button>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </div>-->
+  <!-- Toast Message -->
+  <div id="scenarioToast" class="toast" style="display: none; margin-top: 8px; background-color: #ff4c4c; color: white; padding: 8px 12px; border-radius: 4px; font-weight: 500;">
+    ⚠️ Please restrict yourself only to current screen shown.
+  </div>
+
+  <!-- Chat Messages Section -->
+  <div class="chat-container">
+    <div class="chat-messages" id="scenarioMessages">
+      <div class="loading-container" id="scenarioLoading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Generating test case...</div>
+      </div>
+    </div>
+  </div>
+  </div>
 
 
-<!--  &lt;!&ndash; Toast bar for off-screen validation warning &ndash;&gt;-->
-<!--    <div id="scenarioToast" class="toast" style="display: none; margin-bottom: 8px; background-color: #ff4c4c; color: white; padding: 8px 12px; border-radius: 4px; font-weight: 500;">-->
-<!--      Please restrict yourself only to current screen shown.-->
-<!--    </div>-->
 
-<!--    &lt;!&ndash; Chat-style response area &ndash;&gt;-->
-<!--    <div class="chat-container">-->
-<!--      <div class="chat-messages" id="scenarioMessages">-->
-<!--        <div class="loading-container" id="scenarioLoading" style="display: none;">-->
-<!--          <div class="loading-spinner"></div>-->
-<!--          <div class="loading-text">Generating test case...</div>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--</div>-->
 
 <!-- ========== SCRIPTS ========== -->
 <script src="src/scripts/popup.js"></script>
@@ -188,6 +214,6 @@
 <script src="src/scripts/api/groq-api.js"></script>
 <script src="src/scripts/chat.js" type="module"></script>
 <script src="src/scripts/api/openai-api.js"></script>
-<!--<script src="src/scripts/scenario.js" type="module"></script>-->
+<script src="src/scripts/scenario.js" type="module"></script>
 </body>
 </html>
